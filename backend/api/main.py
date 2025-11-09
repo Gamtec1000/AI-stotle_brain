@@ -145,6 +145,79 @@ async def get_stats():
         "vs_gpt4": "$10 (95% savings!)"
     }
 
+@app.get("/meta.json")
+async def get_meta():
+    """API metadata and capabilities"""
+
+    stats = knowledge_base.get_stats()
+
+    return {
+        "api": {
+            "title": "AI-stotle API",
+            "version": "1.0.0",
+            "description": "The wise AI science tutor for Carls Newton",
+            "philosophy": "Wonder is the beginning of wisdom"
+        },
+        "endpoints": [
+            {
+                "path": "/",
+                "method": "GET",
+                "description": "Health check"
+            },
+            {
+                "path": "/health",
+                "method": "GET",
+                "description": "Detailed health check with system stats"
+            },
+            {
+                "path": "/ask",
+                "method": "POST",
+                "description": "Ask AI-stotle a question",
+                "parameters": {
+                    "question": "string (required)",
+                    "student_age": "int (optional, default: 10)",
+                    "context": "dict (optional)",
+                    "use_knowledge_base": "bool (optional, default: true)"
+                }
+            },
+            {
+                "path": "/experiments/search",
+                "method": "GET",
+                "description": "Search knowledge base experiments",
+                "parameters": {
+                    "query": "string (required)",
+                    "limit": "int (optional, default: 5)"
+                }
+            },
+            {
+                "path": "/stats",
+                "method": "GET",
+                "description": "Get usage statistics and cost information"
+            },
+            {
+                "path": "/meta.json",
+                "method": "GET",
+                "description": "API metadata and capabilities (this endpoint)"
+            }
+        ],
+        "capabilities": {
+            "ai_provider": aristotle.provider,
+            "model": aristotle.model_name,
+            "temperature": aristotle.temperature,
+            "knowledge_base": {
+                "enabled": True,
+                "total_passages": stats.get("total_passages", 0),
+                "topics": stats.get("topics", []),
+                "embedding_model": "sentence-transformers/all-MiniLM-L6-v2",
+                "embedding_dimension": stats.get("embedding_dimension", 384)
+            },
+            "rag_enabled": True,
+            "cors_enabled": True
+        },
+        "status": "online",
+        "documentation": "/docs"
+    }
+
 # ============================================
 # RUN SERVER
 # ============================================
