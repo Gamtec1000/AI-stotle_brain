@@ -6,7 +6,7 @@ pydantic==2.6.0
 python-multipart==0.0.6
 
 # DeepSeek (OpenAI-compatible API)
-openai==1.12.0
+openai>=1.30.0
 
 # Local Embeddings (FREE)
 sentence-transformers==2.3.1
