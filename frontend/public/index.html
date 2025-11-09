@@ -1,0 +1,300 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>AI-stotle Widget Demo - Carls Newton</title>
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+      background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
+      color: white;
+      min-height: 100vh;
+      padding: 40px 20px;
+    }
+
+    .container {
+      max-width: 1200px;
+      margin: 0 auto;
+    }
+
+    header {
+      text-align: center;
+      margin-bottom: 60px;
+    }
+
+    h1 {
+      font-size: 48px;
+      margin-bottom: 16px;
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+    }
+
+    .subtitle {
+      font-size: 20px;
+      opacity: 0.8;
+      margin-bottom: 8px;
+    }
+
+    .philosophy {
+      font-size: 16px;
+      opacity: 0.6;
+      font-style: italic;
+    }
+
+    .content {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+      gap: 30px;
+      margin-bottom: 40px;
+    }
+
+    .card {
+      background: rgba(255, 255, 255, 0.05);
+      border-radius: 16px;
+      padding: 30px;
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      backdrop-filter: blur(10px);
+    }
+
+    .card h2 {
+      font-size: 24px;
+      margin-bottom: 16px;
+      color: #667eea;
+    }
+
+    .card p {
+      line-height: 1.6;
+      opacity: 0.9;
+      margin-bottom: 12px;
+    }
+
+    .card ul {
+      list-style: none;
+      padding-left: 0;
+    }
+
+    .card li {
+      padding: 8px 0;
+      border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+    }
+
+    .card li:last-child {
+      border-bottom: none;
+    }
+
+    .demo-section {
+      background: rgba(102, 126, 234, 0.1);
+      border-radius: 16px;
+      padding: 40px;
+      text-align: center;
+      border: 2px dashed rgba(102, 126, 234, 0.3);
+    }
+
+    .demo-section h2 {
+      font-size: 28px;
+      margin-bottom: 16px;
+    }
+
+    .demo-section p {
+      font-size: 18px;
+      opacity: 0.8;
+      margin-bottom: 24px;
+    }
+
+    .demo-questions {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+      gap: 16px;
+      margin-top: 24px;
+    }
+
+    .demo-question {
+      background: rgba(255, 255, 255, 0.05);
+      padding: 16px;
+      border-radius: 12px;
+      cursor: pointer;
+      transition: all 0.2s ease;
+      border: 1px solid rgba(255, 255, 255, 0.1);
+    }
+
+    .demo-question:hover {
+      background: rgba(102, 126, 234, 0.2);
+      transform: translateY(-2px);
+    }
+
+    .demo-question strong {
+      display: block;
+      color: #667eea;
+      margin-bottom: 8px;
+    }
+
+    code {
+      background: rgba(0, 0, 0, 0.3);
+      padding: 2px 6px;
+      border-radius: 4px;
+      font-family: 'Courier New', monospace;
+      font-size: 14px;
+    }
+
+    .footer {
+      text-align: center;
+      margin-top: 60px;
+      padding-top: 30px;
+      border-top: 1px solid rgba(255, 255, 255, 0.1);
+      opacity: 0.6;
+    }
+
+    .status-indicator {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      background: rgba(76, 175, 80, 0.2);
+      padding: 8px 16px;
+      border-radius: 20px;
+      font-size: 14px;
+      margin-top: 20px;
+    }
+
+    .status-dot {
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      background: #4caf50;
+      animation: pulse 2s infinite;
+    }
+
+    @keyframes pulse {
+      0%, 100% {
+        opacity: 1;
+      }
+      50% {
+        opacity: 0.5;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <header>
+      <h1>🏛️ AI-stotle Widget Demo</h1>
+      <p class="subtitle">Your Wise AI Science Companion</p>
+      <p class="philosophy">"Wonder is the beginning of wisdom" - Aristotle</p>
+      <div class="status-indicator">
+        <span class="status-dot"></span>
+        Widget Active - Click the button in the bottom-right corner!
+      </div>
+    </header>
+
+    <div class="content">
+      <div class="card">
+        <h2>🚀 Features</h2>
+        <ul>
+          <li>✅ Free local embeddings (ChromaDB)</li>
+          <li>✅ RAG-powered answers from knowledge base</li>
+          <li>✅ DeepSeek AI (ultra-low-cost)</li>
+          <li>✅ Age-appropriate responses</li>
+          <li>✅ Experiment search</li>
+          <li>✅ Beautiful dark theme</li>
+        </ul>
+      </div>
+
+      <div class="card">
+        <h2>📊 API Endpoints</h2>
+        <ul>
+          <li><code>GET /</code> - Health check</li>
+          <li><code>GET /health</code> - Detailed stats</li>
+          <li><code>POST /ask</code> - Ask questions</li>
+          <li><code>GET /experiments/search</code> - Search</li>
+          <li><code>GET /stats</code> - Usage stats</li>
+          <li><code>GET /meta.json</code> - API metadata</li>
+        </ul>
+      </div>
+
+      <div class="card">
+        <h2>🎯 Tech Stack</h2>
+        <p><strong>Backend:</strong></p>
+        <ul>
+          <li>FastAPI (Python)</li>
+          <li>ChromaDB (vector database)</li>
+          <li>Sentence Transformers (embeddings)</li>
+          <li>DeepSeek / Claude AI</li>
+        </ul>
+        <p style="margin-top: 16px;"><strong>Frontend:</strong></p>
+        <ul>
+          <li>React + TypeScript</li>
+          <li>Axios (API client)</li>
+          <li>Lucide Icons</li>
+        </ul>
+      </div>
+    </div>
+
+    <div class="demo-section">
+      <h2>🧪 Try Sample Questions</h2>
+      <p>Click the AI-stotle button below, then try asking these questions:</p>
+
+      <div class="demo-questions">
+        <div class="demo-question">
+          <strong>🧪 Chemistry</strong>
+          "What makes elephant toothpaste foam up?"
+        </div>
+        <div class="demo-question">
+          <strong>⚡ Physics</strong>
+          "Why do balloons stick to the wall after rubbing them?"
+        </div>
+        <div class="demo-question">
+          <strong>🌈 General</strong>
+          "What is the scientific method?"
+        </div>
+        <div class="demo-question">
+          <strong>🔬 Experiments</strong>
+          "Show me fun science experiments for 10-year-olds"
+        </div>
+      </div>
+    </div>
+
+    <div class="footer">
+      <p>AI-stotle Widget v1.0.0 • Powered by DeepSeek & ChromaDB</p>
+      <p>Made for Carls Newton Science Shows • Dubai, UAE</p>
+    </div>
+  </div>
+
+  <!-- AI-stotle Widget will be injected here -->
+  <div id="aristotle-widget-root"></div>
+
+  <script>
+    // This would normally be your React app
+    console.log('🏛️ AI-stotle Widget Demo Page');
+    console.log('Backend API: http://localhost:8000');
+    console.log('To use the widget, build your React app and include it here');
+
+    // Display helpful info
+    console.log('\n📚 Quick Start:');
+    console.log('1. Ensure backend is running: cd backend && python -m api.main');
+    console.log('2. Build frontend: cd frontend && npm run build');
+    console.log('3. Widget will appear in bottom-right corner');
+
+    // Check API health
+    fetch('http://localhost:8000/meta.json')
+      .then(res => res.json())
+      .then(data => {
+        console.log('\n✅ API Connected:', data.api.title);
+        console.log('📊 Collections:', data.capabilities.knowledge_base.collections);
+        console.log('🤖 Model:', data.capabilities.model);
+        console.log('💰 Cost:', data.capabilities.knowledge_base.total_cost);
+      })
+      .catch(err => {
+        console.error('\n❌ API Connection Failed:', err.message);
+        console.log('Make sure backend is running on http://localhost:8000');
+      });
+  </script>
+</body>
+</html>
