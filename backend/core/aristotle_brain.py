@@ -64,20 +64,20 @@ class AristotleBrain:
             try:
                 self.knowledge_base = AristotleKnowledge()
                 stats = self.knowledge_base.get_stats()
-                print(f'✅ Knowledge base loaded: {stats[\"total_passages\"]} passages')
+                print(f'✅ Knowledge base loaded: {stats["total_passages"]} passages')
             except Exception as e:
                 print(f'⚠️ Could not load knowledge base: {e}')
         
         # AI-stotle's philosophical personality
-        self.personality = \"\"\"
-        I am AI-stotle (Aristotle + AI), a wise and enthusiastic science tutor 
+        self.personality = """
+        I am AI-stotle (Aristotle + AI), a wise and enthusiastic science tutor
         for Carls Newton shows in Dubai!
-        
+
         PHILOSOPHY:
-        - \"Wonder is the beginning of wisdom\" - I encourage curiosity
-        - \"The more you know, the more you know you don't know\" - Humble learning
-        - \"We are what we repeatedly do\" - Practice and hands-on experiments
-        
+        - "Wonder is the beginning of wisdom" - I encourage curiosity
+        - "The more you know, the more you know you don't know" - Humble learning
+        - "We are what we repeatedly do" - Practice and hands-on experiments
+
         PERSONALITY:
         - Wise but never condescending
         - Patient and encouraging
@@ -85,38 +85,38 @@ class AristotleBrain:
         - Makes complex ideas simple
         - Connects science to philosophy and life
         - Uses analogies and metaphors
-        
+
         COMMUNICATION STYLE:
         - Clear, age-appropriate language
         - Short answers (2-3 sentences) unless asked for more
         - Real-world examples and connections
         - Encourages hands-on experimentation
         - Occasional philosophical wisdom
-        
+
         SIGNATURE PHRASES:
-        - \"Ah, a curious mind asks...\"
-        - \"Let me enlighten you...\"
-        - \"As the great philosophers knew...\"
-        - \"Science and wisdom combined show us...\"
-        \"\"\"
+        - "Ah, a curious mind asks..."
+        - "Let me enlighten you..."
+        - "As the great philosophers knew..."
+        - "Science and wisdom combined show us..."
+        """
     
     def ask_aristotle(self,
                      question: str,
                      student_age: int = 10,
                      context: Optional[Dict] = None,
                      use_rag: bool = True) -> Dict:
-        \"\"\"
+        """
         Ask AI-stotle a question
-        
+
         Args:
             question: Student's question
             student_age: Age for appropriate language
             context: Current show context
             use_rag: Whether to use knowledge base (RAG)
-            
+
         Returns:
             Dictionary with answer and metadata
-        \"\"\"
+        """
         
         # Search knowledge base if available
         knowledge_passages = []
@@ -148,7 +148,7 @@ class AristotleBrain:
             }
     
     def _ask_claude(self, prompt: str) -> Dict:
-        \"\"\"Query Claude\"\"\"
+        """Query Claude"""
         from anthropic import Anthropic
         response = self.client.messages.create(
             model=self.model,
@@ -173,7 +173,7 @@ class AristotleBrain:
         }
     
     def _ask_deepseek(self, prompt: str) -> Dict:
-        \"\"\"Query DeepSeek\"\"\"
+        """Query DeepSeek"""
         response = self.client.chat.completions.create(
             model=self.model,
             messages=[
@@ -201,7 +201,7 @@ class AristotleBrain:
                      age: int,
                      context: Optional[Dict],
                      knowledge: Optional[List[str]]) -> str:
-        \"\"\"Build prompt for AI\"\"\"
+        """Build prompt for AI"""
         
         prompt_parts = [f'STUDENT AGE: {age} years old\n']
         
@@ -220,7 +220,7 @@ class AristotleBrain:
         prompt_parts.append(f'STUDENT QUESTION:\n{question}\n\n')
         
         # Add instructions
-        prompt_parts.append(f\"\"\"
+        prompt_parts.append(f"""
 INSTRUCTIONS:
 1. Answer clearly for a {age}-year-old student
 2. Use the knowledge provided above when relevant
@@ -229,18 +229,18 @@ INSTRUCTIONS:
 5. Encourage hands-on learning
 
 AI-STOTLE'S WISE RESPONSE:
-\"\"\")
+""")
         
         return ''.join(prompt_parts)
     
     def _estimate_cost_claude(self, usage) -> float:
-        \"\"\"Claude Sonnet 4: `$`3 input / `$`15 output per 1M tokens\"\"\"
+        """Claude Sonnet 4: $3 input / $15 output per 1M tokens"""
         input_cost = (usage.input_tokens / 1_000_000) * 3.0
         output_cost = (usage.output_tokens / 1_000_000) * 15.0
         return round(input_cost + output_cost, 6)
     
     def _estimate_cost_deepseek(self, usage) -> float:
-        \"\"\"DeepSeek: `$`0.14 input / `$`0.28 output per 1M tokens\"\"\"
+        """DeepSeek: $0.14 input / $0.28 output per 1M tokens"""
         input_cost = (usage.prompt_tokens / 1_000_000) * 0.14
         output_cost = (usage.completion_tokens / 1_000_000) * 0.28
         return round(input_cost + output_cost, 6)
@@ -279,16 +279,16 @@ if __name__ == '__main__':
             )
             
             if response['success']:
-                print(f'🏛️ AI-stotle: {response[\"answer\"]}')
-                print(f'💰 Cost: `$`{response[\"cost\"]:.6f}')
-                print(f'🔢 Tokens: {response[\"tokens_used\"]}')
+                print(f'🏛️ AI-stotle: {response["answer"]}')
+                print(f'💰 Cost: ${response["cost"]:.6f}')
+                print(f'🔢 Tokens: {response["tokens_used"]}')
                 total_cost += response['cost']
             else:
-                print(f'❌ Error: {response[\"error\"]}')
+                print(f'❌ Error: {response["error"]}')
         
-        print(f'\n💰 Total cost for 4 questions: `$`{total_cost:.6f}')
-        print(f'📊 Compared to Claude: ~`$`{total_cost * 40:.4f} (40x more expensive!)')
-        print(f'💵 Savings: ~`$`{(total_cost * 40) - total_cost:.4f} (97.5%!)')
+        print(f'\n💰 Total cost for 4 questions: ${total_cost:.6f}')
+        print(f'📊 Compared to Claude: ~${total_cost * 40:.4f} (40x more expensive!)')
+        print(f'💵 Savings: ~${(total_cost * 40) - total_cost:.4f} (97.5%!)')
         
     except Exception as e:
         print(f'⚠️ DeepSeek not configured: {e}')
