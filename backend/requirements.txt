@@ -1,0 +1,30 @@
+# Core API
+fastapi==0.109.0
+uvicorn[standard]==0.27.0
+python-dotenv==1.0.0
+pydantic==2.6.0
+python-multipart==0.0.6
+
+# DeepSeek (OpenAI-compatible API)
+openai==1.12.0
+
+# Local Embeddings (FREE)
+sentence-transformers==2.3.1
+torch==2.5.1
+
+# Vector Database (FREE) - TEMPORARILY DISABLED - needs C++ build tools
+# chromadb==0.4.22
+
+# Image Generation (FREE - Local Stable Diffusion)
+diffusers==0.25.0
+transformers==4.37.0
+accelerate==0.26.0
+Pillow==10.2.0
+
+# Utilities
+numpy==1.26.3
+requests==2.31.0
+aiofiles==23.2.1
+
+# CORS
+fastapi-cors==0.0.6
