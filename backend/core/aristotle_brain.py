@@ -12,10 +12,6 @@ from typing import Dict, List, Optional
 from dotenv import load_dotenv
 import json
 
-# Add knowledge module to path
-sys.path.append(os.path.join(os.path.dirname(__file__), '..'))
-from knowledge.faiss_knowledge import AristotleKnowledge
-
 load_dotenv()
 
 class AristotleBrain:
@@ -24,16 +20,15 @@ class AristotleBrain:
     Philosophy meets modern AI - wisdom at low cost!
     """
     
-    def __init__(self, provider: str = None, use_knowledge: bool = True):
+    def __init__(self, provider: str = None):
         """
         Initialize AI-stotle with chosen AI provider
-        
+
         Args:
             provider: 'deepseek' or 'claude' (defaults to env ARISTOTLE_AI_PROVIDER)
-            use_knowledge: Whether to use FAISS knowledge base
         """
         self.provider = provider or os.getenv('ARISTOTLE_AI_PROVIDER', 'deepseek')
-        
+
         # Initialize AI provider
         if self.provider == 'claude':
             try:
@@ -43,6 +38,8 @@ class AristotleBrain:
                     raise ValueError('ANTHROPIC_API_KEY not found in environment')
                 self.client = Anthropic(api_key=api_key)
                 self.model = 'claude-sonnet-4-20250514'
+                self.model_name = self.model
+                self.temperature = float(os.getenv('TEMPERATURE', 0.7))
                 print(f'🤖 Using Claude Sonnet 4')
             except ImportError:
                 print('⚠️ Anthropic package not installed. Install with: pip install anthropic')
@@ -56,17 +53,9 @@ class AristotleBrain:
                 base_url=os.getenv('DEEPSEEK_BASE_URL', 'https://api.deepseek.com')
             )
             self.model = 'deepseek-chat'
+            self.model_name = self.model
+            self.temperature = float(os.getenv('TEMPERATURE', 0.7))
             print(f'🤖 Using DeepSeek Chat (Ultra-low-cost)')
-        
-        # Initialize knowledge base
-        self.knowledge_base = None
-        if use_knowledge:
-            try:
-                self.knowledge_base = AristotleKnowledge()
-                stats = self.knowledge_base.get_stats()
-                print(f'✅ Knowledge base loaded: {stats["total_passages"]} passages')
-            except Exception as e:
-                print(f'⚠️ Could not load knowledge base: {e}')
         
         # AI-stotle's philosophical personality
         self.personality = """
@@ -104,7 +93,7 @@ class AristotleBrain:
                      question: str,
                      student_age: int = 10,
                      context: Optional[Dict] = None,
-                     use_rag: bool = True) -> Dict:
+                     knowledge: Optional[List[str]] = None) -> Dict:
         """
         Ask AI-stotle a question
 
@@ -112,19 +101,17 @@ class AristotleBrain:
             question: Student's question
             student_age: Age for appropriate language
             context: Current show context
-            use_rag: Whether to use knowledge base (RAG)
+            knowledge: Optional pre-retrieved knowledge passages
 
         Returns:
             Dictionary with answer and metadata
         """
-        
-        # Search knowledge base if available
-        knowledge_passages = []
-        if use_rag and self.knowledge_base:
-            results = self.knowledge_base.search(question, top_k=3)
-            knowledge_passages = [r['text'] for r in results]
-            print(f'🔍 Found {len(knowledge_passages)} relevant passages')
-        
+
+        # Use provided knowledge or empty list
+        knowledge_passages = knowledge or []
+        if knowledge_passages:
+            print(f'🔍 Using {len(knowledge_passages)} knowledge passages')
+
         # Build prompt
         prompt = self._build_prompt(
             question=question,
