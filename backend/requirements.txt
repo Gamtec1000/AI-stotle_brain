@@ -12,8 +12,8 @@ openai==1.12.0
 sentence-transformers==2.3.1
 torch==2.5.1
 
-# Vector Database (FREE) - TEMPORARILY DISABLED - needs C++ build tools
-# chromadb==0.4.22
+# Vector Database (FREE)
+faiss-cpu==1.7.4  # Use faiss-gpu if you have CUDA GPU
 
 # Image Generation (FREE - Local Stable Diffusion)
 diffusers==0.25.0
