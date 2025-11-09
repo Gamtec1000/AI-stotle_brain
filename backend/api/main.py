@@ -242,10 +242,12 @@ async def get_meta():
                 "vector_db": stats.get("vector_db", "ChromaDB"),
                 "total_experiments": stats.get("total_experiments", 0),
                 "total_qa_pairs": stats.get("total_qa_pairs", 0),
+                "total_concepts": stats.get("total_concepts", 0),
                 "total_passages": stats.get("total_passages", 0),
-                "collections": stats.get("collections", ["experiments", "qa"]),
-                "embedding_model": stats.get("embedding_model", "sentence-transformers/all-MiniLM-L6-v2"),
-                "embedding_dimension": stats.get("embedding_dimension", 384)
+                "collections": stats.get("collections", ["experiments", "qa_pairs", "concepts"]),
+                "embedding_model": stats.get("embedding_model", "all-mpnet-base-v2"),
+                "embedding_dimension": stats.get("embedding_dimension", 768),
+                "total_cost": stats.get("total_cost", "$0 (all local!)")
             },
             "rag_enabled": True,
             "cors_enabled": True

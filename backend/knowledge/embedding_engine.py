@@ -1,213 +1,231 @@
 # backend/knowledge/embedding_engine.py
 """
-AI-stotle Knowledge Base using ChromaDB
-Free, fast, and local vector search for scientific knowledge
+Free local embeddings using sentence-transformers
+No API costs!
 """
 
+from sentence_transformers import SentenceTransformer
 import chromadb
 from chromadb.config import Settings
+import json
 import os
-from typing import List, Dict, Optional
-from sentence_transformers import SentenceTransformer
 from pathlib import Path
+from typing import List, Dict
+import numpy as np
 
 class LocalEmbeddingEngine:
     """
-    Knowledge base for AI-stotle using ChromaDB
-    Stores and retrieves scientific knowledge for Carls Newton shows
+    FREE embedding engine using local models
     """
 
-    def __init__(self, persist_directory: str = None):
+    def __init__(self):
+        """Initialize with free local model"""
+
+        print("🔧 Loading local embedding model...")
+
+        # Use best free model
+        self.model = SentenceTransformer('all-mpnet-base-v2')
+
+        print("✅ Model loaded!")
+
+        # Initialize ChromaDB (local, free)
+        db_path = os.getenv("CHROMA_DB_PATH", "../data/embeddings/chroma")
+        os.makedirs(db_path, exist_ok=True)
+
+        self.chroma_client = chromadb.PersistentClient(path=db_path)
+
+        # Create collections
+        self.experiments = self.chroma_client.get_or_create_collection(
+            name="experiments",
+            metadata={"description": "Carls Newton experiments"}
+        )
+
+        self.qa_pairs = self.chroma_client.get_or_create_collection(
+            name="qa_pairs",
+            metadata={"description": "Common questions and answers"}
+        )
+
+        self.concepts = self.chroma_client.get_or_create_collection(
+            name="concepts",
+            metadata={"description": "Science concepts"}
+        )
+
+    def create_embedding(self, text: str) -> List[float]:
         """
-        Initialize knowledge base with ChromaDB
+        Create embedding (FREE - runs locally)
 
         Args:
-            persist_directory: Path to persist ChromaDB data
+            text: Text to embed
+
+        Returns:
+            Embedding vector
         """
-        self.persist_directory = persist_directory or os.getenv(
-            "CHROMA_PERSIST_DIR",
-            "../data/embeddings"
-        )
+        embedding = self.model.encode(text, convert_to_numpy=True)
+        return embedding.tolist()
 
-        # Ensure directory exists
-        Path(self.persist_directory).mkdir(parents=True, exist_ok=True)
+    def embed_experiments(self, experiments_file: str):
+        """
+        Embed all experiments from JSON file
+        """
+        print(f"\n📚 Embedding experiments from {experiments_file}...")
 
-        # Initialize ChromaDB client
-        print(f"📚 Initializing ChromaDB at {self.persist_directory}")
-        self.client = chromadb.PersistentClient(path=self.persist_directory)
+        with open(experiments_file, 'r') as f:
+            experiments = json.load(f)
 
-        # Load embedding model (384 dimensions, fast and efficient)
-        model_name = os.getenv(
-            "EMBEDDING_MODEL",
-            "sentence-transformers/all-MiniLM-L6-v2"
-        )
-        print(f"🔤 Loading embedding model: {model_name}")
-        self.embedding_model = SentenceTransformer(model_name)
+        for exp in experiments:
+            # Create rich text
+            text = f"""
+            Experiment: {exp['name']}
+            Category: {exp['category']}
 
-        # Get or create collections
-        self.experiments_collection = self._get_or_create_collection("experiments")
-        self.qa_collection = self._get_or_create_collection("qa")
+            Description:
+            {exp['description']}
 
-        print("✅ Knowledge base initialized")
+            Science Concepts:
+            {', '.join(exp['science_concepts'])}
 
-    def _get_or_create_collection(self, name: str):
-        """Get or create a ChromaDB collection"""
-        try:
-            return self.client.get_collection(name=name)
-        except:
-            return self.client.create_collection(
-                name=name,
-                metadata={"hnsw:space": "cosine"}
+            Age Groups: {exp['age_min']}-{exp['age_max']} years
+
+            Materials: {', '.join(exp['materials'])}
+
+            Safety Notes: {' '.join(exp['safety_notes'])}
+
+            Wow Factor: {exp['wow_factor']}/10
+            """
+
+            # Create embedding (FREE!)
+            embedding = self.create_embedding(text)
+
+            # Store in ChromaDB
+            self.experiments.add(
+                ids=[exp['id']],
+                embeddings=[embedding],
+                documents=[text],
+                metadatas=[{
+                    'name': exp['name'],
+                    'category': exp['category'],
+                    'age_min': exp['age_min'],
+                    'age_max': exp['age_max'],
+                    'wow_factor': exp['wow_factor']
+                }]
             )
 
-    def add_experiments(self,
-                       experiments: List[Dict]):
-        """
-        Add experiments to the knowledge base
+            print(f"   ✅ {exp['name']}")
 
-        Args:
-            experiments: List of experiment dictionaries with:
-                - name: Experiment name
-                - description: Detailed description
-                - category: Science category
-                - age_min/age_max: Age range
-                - wow_factor: How exciting (1-10)
-                - safety_notes: Safety considerations
-        """
-        if not experiments:
-            return
+        print(f"\n✅ Embedded {len(experiments)} experiments (Cost: $0)")
 
-        print(f"🔬 Adding {len(experiments)} experiments...")
+    def embed_qa_pairs(self, experiments_file: str):
+        """Embed Q&A pairs"""
 
-        documents = []
-        metadatas = []
-        ids = []
+        print(f"\n💬 Embedding Q&A pairs...")
 
-        for i, exp in enumerate(experiments):
-            # Create searchable document
-            doc = f"{exp['name']}: {exp['description']}"
-            documents.append(doc)
+        with open(experiments_file, 'r') as f:
+            experiments = json.load(f)
 
-            # Store metadata
-            metadatas.append({
-                "name": exp['name'],
-                "category": exp['category'],
-                "age_min": exp.get('age_min', 5),
-                "age_max": exp.get('age_max', 12),
-                "wow_factor": exp.get('wow_factor', 5),
-                "safety_notes": exp.get('safety_notes', '')
-            })
+        qa_count = 0
 
-            # Generate ID
-            ids.append(f"exp_{i}")
+        for exp in experiments:
+            for qa in exp.get('common_questions', []):
+                text = f"""
+                Question: {qa['question']}
+                Answer: {qa['answer']}
+                Related to: {exp['name']} ({exp['category']})
+                """
 
-        # Add to collection
-        self.experiments_collection.add(
-            documents=documents,
-            metadatas=metadatas,
-            ids=ids
-        )
+                embedding = self.create_embedding(text)
 
-        print(f"✅ Added {len(experiments)} experiments")
+                self.qa_pairs.add(
+                    ids=[f"{exp['id']}_qa_{qa_count}"],
+                    embeddings=[embedding],
+                    documents=[text],
+                    metadatas=[{
+                        'question': qa['question'],
+                        'experiment': exp['name'],
+                        'experiment_id': exp['id']
+                    }]
+                )
 
-    def add_qa_pairs(self, qa_pairs: List[Dict]):
-        """
-        Add Q&A pairs to the knowledge base
+                qa_count += 1
 
-        Args:
-            qa_pairs: List of Q&A dictionaries with:
-                - question: The question
-                - answer: The answer
-                - topic: Science topic
-                - difficulty: easy/medium/hard
-        """
-        if not qa_pairs:
-            return
-
-        print(f"💬 Adding {len(qa_pairs)} Q&A pairs...")
-
-        documents = []
-        metadatas = []
-        ids = []
-
-        for i, qa in enumerate(qa_pairs):
-            # Create searchable document (question + answer)
-            doc = f"Q: {qa['question']}\nA: {qa['answer']}"
-            documents.append(doc)
-
-            # Store metadata
-            metadatas.append({
-                "question": qa['question'],
-                "answer": qa['answer'],
-                "topic": qa.get('topic', 'general'),
-                "difficulty": qa.get('difficulty', 'medium')
-            })
-
-            # Generate ID
-            ids.append(f"qa_{i}")
-
-        # Add to collection
-        self.qa_collection.add(
-            documents=documents,
-            metadatas=metadatas,
-            ids=ids
-        )
-
-        print(f"✅ Added {len(qa_pairs)} Q&A pairs")
+        print(f"✅ Embedded {qa_count} Q&A pairs (Cost: $0)")
 
     def search(self,
-               query: str,
-               collection: str = "experiments",
-               n_results: int = 3) -> Dict:
+              query: str,
+              collection: str = "experiments",
+              n_results: int = 3) -> Dict:
         """
-        Search knowledge base for relevant content
+        Search knowledge base (FREE!)
 
         Args:
             query: Search query
-            collection: "experiments" or "qa"
-            n_results: Number of results to return
+            collection: Which collection to search
+            n_results: Number of results
 
         Returns:
-            Dictionary with documents, metadatas, distances
+            Search results
         """
-        # Select collection
-        coll = self.experiments_collection if collection == "experiments" else self.qa_collection
+        # Create query embedding (FREE!)
+        query_embedding = self.create_embedding(query)
 
         # Search
-        results = coll.query(
-            query_texts=[query],
-            n_results=n_results
-        )
+        if collection == "experiments":
+            results = self.experiments.query(
+                query_embeddings=[query_embedding],
+                n_results=n_results
+            )
+        elif collection == "qa" or collection == "qa_pairs":
+            results = self.qa_pairs.query(
+                query_embeddings=[query_embedding],
+                n_results=n_results
+            )
+        else:
+            results = self.concepts.query(
+                query_embeddings=[query_embedding],
+                n_results=n_results
+            )
 
-        return {
-            "documents": results['documents'],
-            "metadatas": results['metadatas'],
-            "distances": results['distances']
-        }
+        return results
 
-    def get_stats(self) -> Dict:
-        """Get knowledge base statistics"""
-        exp_count = self.experiments_collection.count()
-        qa_count = self.qa_collection.count()
+    def get_stats(self):
+        """Get database statistics"""
+
+        exp_count = self.experiments.count()
+        qa_count = self.qa_pairs.count()
+        concepts_count = self.concepts.count()
 
         return {
             "total_experiments": exp_count,
             "total_qa_pairs": qa_count,
-            "total_passages": exp_count + qa_count,
-            "collections": ["experiments", "qa"],
-            "embedding_model": "sentence-transformers/all-MiniLM-L6-v2",
-            "embedding_dimension": 384,
-            "vector_db": "ChromaDB"
+            "total_concepts": concepts_count,
+            "total_passages": exp_count + qa_count + concepts_count,
+            "collections": ["experiments", "qa_pairs", "concepts"],
+            "embedding_model": "all-mpnet-base-v2",
+            "embedding_dimension": 768,
+            "vector_db": "ChromaDB",
+            "total_cost": "$0 (all local!)"
         }
 
-    def clear_collection(self, collection: str):
-        """Clear a collection (for testing/rebuilding)"""
-        print(f"🗑️ Clearing {collection} collection...")
-        self.client.delete_collection(name=collection)
 
-        if collection == "experiments":
-            self.experiments_collection = self._get_or_create_collection("experiments")
-        else:
-            self.qa_collection = self._get_or_create_collection("qa")
+# Test
+if __name__ == "__main__":
+    print("\n" + "="*60)
+    print("🆓 FREE LOCAL EMBEDDINGS ENGINE")
+    print("="*60)
 
-        print(f"✅ Cleared {collection}")
+    engine = LocalEmbeddingEngine()
+
+    # Test search
+    print("\n🔍 Testing search...")
+
+    results = engine.search("foam explosion chemistry")
+
+    print(f"Found {len(results['documents'][0])} results")
+    print(f"Top result: {results['metadatas'][0][0].get('name', 'N/A')}")
+
+    print("\n📊 Database stats:")
+    stats = engine.get_stats()
+    for key, value in stats.items():
+        print(f"   {key}: {value}")
+
+    print("\n💰 Total embedding cost: $0")
+    print("="*60)
