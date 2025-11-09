@@ -15,7 +15,7 @@ from pathlib import Path
 sys.path.append(str(Path(__file__).parent.parent))
 
 from core.aristotle_brain import AristotleBrain
-from knowledge.embedding_engine import LocalEmbeddingEngine
+from knowledge.faiss_knowledge import AristotleKnowledge
 
 # Initialize FastAPI
 app = FastAPI(
@@ -40,7 +40,7 @@ app.add_middleware(
 
 # Initialize AI-stotle
 aristotle = AristotleBrain()
-knowledge_engine = LocalEmbeddingEngine()
+knowledge_base = AristotleKnowledge()
 
 # Request/Response Models
 class QuestionRequest(BaseModel):
@@ -73,8 +73,8 @@ async def root():
 @app.get("/health")
 async def health():
     """Detailed health check"""
-    stats = knowledge_engine.get_stats()
-    
+    stats = knowledge_base.get_stats()
+
     return {
         "status": "healthy",
         "aristotle": "ready",
@@ -92,41 +92,12 @@ async def ask_question(request: QuestionRequest):
     """
     
     try:
-        # Search knowledge base if requested
-        relevant_knowledge = None
-        sources = None
-        
-        if request.use_knowledge_base:
-            # Search experiments
-            exp_results = knowledge_engine.search(
-                request.question,
-                collection="experiments",
-                n_results=2
-            )
-            
-            # Search Q&A
-            qa_results = knowledge_engine.search(
-                request.question,
-                collection="qa",
-                n_results=2
-            )
-            
-            relevant_knowledge = (
-                exp_results['documents'][0] + 
-                qa_results['documents'][0]
-            )
-            
-            sources = (
-                exp_results['metadatas'][0] + 
-                qa_results['metadatas'][0]
-            )
-        
-        # Get answer from AI-stotle
+        # Get answer from AI-stotle (it will search knowledge base internally if use_rag=True)
         response = aristotle.ask_aristotle(
             question=request.question,
             student_age=request.student_age,
             context=request.context,
-            knowledge=relevant_knowledge
+            use_rag=request.use_knowledge_base
         )
         
         if response['success']:
@@ -135,7 +106,7 @@ async def ask_question(request: QuestionRequest):
                 success=True,
                 cost=response.get('cost'),
                 tokens_used=response.get('tokens_used'),
-                sources=sources
+                sources=None  # FAISS doesn't provide metadata in current implementation
             )
         else:
             raise HTTPException(status_code=500, detail=response.get('error'))
@@ -146,31 +117,27 @@ async def ask_question(request: QuestionRequest):
 @app.get("/experiments/search")
 async def search_experiments(query: str, limit: int = 5):
     """Search experiments"""
-    
-    results = knowledge_engine.search(
-        query,
-        collection="experiments",
-        n_results=limit
-    )
-    
+
+    results = knowledge_base.search(query, top_k=limit)
+
     return {
         "results": [
             {
-                "name": meta['name'],
-                "category": meta['category'],
-                "age_range": f"{meta['age_min']}-{meta['age_max']}",
-                "wow_factor": meta['wow_factor']
+                "text": result['text'][:200] + "...",
+                "topic": result['metadata'].get('topic', 'unknown'),
+                "experiment": result['metadata'].get('experiment', 'unknown'),
+                "score": result['score']
             }
-            for meta in results['metadatas'][0]
+            for result in results
         ]
     }
 
 @app.get("/stats")
 async def get_stats():
     """Get usage statistics"""
-    
-    stats = knowledge_engine.get_stats()
-    
+
+    stats = knowledge_base.get_stats()
+
     return {
         "knowledge_base": stats,
         "model": "deepseek-chat",
