@@ -28,10 +28,13 @@ app = FastAPI(
 app.add_middleware(
     CORSMiddleware,
     allow_origins=[
-        "http://localhost:3000",
-        "http://localhost:3001",
-        "https://carlsnewton.com",
-        "https://www.carlsnewton.com"
+        "http://localhost:5173",      # Vite dev server (CRITICAL for frontend!)
+        "http://localhost:3000",      # Alternative React port
+        "http://localhost:3001",      # Alternative port
+        "http://127.0.0.1:5173",      # Vite dev server (alternative)
+        "http://127.0.0.1:3000",      # Alternative React port
+        "https://carlsnewton.com",    # Production domain
+        "https://www.carlsnewton.com" # Production domain (www)
     ],
     allow_credentials=True,
     allow_methods=["*"],
